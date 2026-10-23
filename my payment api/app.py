@@ -6,7 +6,7 @@ from fastapi import FastAPI, HTTPException, Query
 from fastapi.responses import PlainTextResponse
 
 app = FastAPI(
-    title="👑 My Payment API",
+    title="👑 PRIYANSHU OP",
     docs_url=None,
     redoc_url=None
 )
@@ -21,7 +21,7 @@ CONTACT = "https://t.me/priyanshuexploits"
 @app.get("/", response_class=PlainTextResponse)
 def home():
     return (
-        "👑 MY PAYMENT API 👑\n"
+        "👑 PRIYANSHU OP 👑\n"
         "━━━━━━━━━━━━━━━━━━\n"
         "🟢 Status: Online\n"
         "🔎 Search: /lookup?phone=9730403194\n"
@@ -68,7 +68,7 @@ def lookup(
         # Match exact digits or check if query matches the cleaned mobile number
         if clean_phone == clean_query or raw_phone.strip() == phone.strip():
             return (
-                "👑 MY PAYMENT API 👑\n"
+                "👑 PRIYANSHU OP 👑\n"
                 "━━━━━━━━━━━━━━━━━━\n\n"
                 "✅ STATUS: MATCH FOUND\n\n"
                 f"👤 Name: {record.get('Paytm User Name', 'N/A')}\n"
