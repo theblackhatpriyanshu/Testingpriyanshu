@@ -1,5 +1,5 @@
-
 import json
+import re
 from pathlib import Path
 
 from fastapi import FastAPI, HTTPException, Query
@@ -24,8 +24,7 @@ def home():
         "👑 MY PAYMENT API 👑\n"
         "━━━━━━━━━━━━━━━━━━\n"
         "🟢 Status: Online\n"
-        "🔎 Search: /lookup?phone=9000000001\n"
-        "🧪 Mode: Synthetic Demo Only\n"
+        "🔎 Search: /lookup?phone=9730403194\n"
         "🔓 API Key: Not Required\n"
         "━━━━━━━━━━━━━━━━━━\n"
         f"👨‍💻 Created By: {CREATED_BY}\n"
@@ -49,28 +48,31 @@ def lookup(
         if not isinstance(records, list):
             raise ValueError("Expected a list")
 
-    except (OSError, json.JSONDecodeError, ValueError):
+    except (OSError, json.JSONDecodeError, ValueError) as e:
         raise HTTPException(
             status_code=500,
-            detail="⚠️ Demo database unavailable or invalid"
+            detail=f"⚠️ Database error: {str(e)}"
         )
+
+    # Clean query to digits only
+    clean_query = re.sub(r"\D", "", phone)
 
     for record in records:
         if not isinstance(record, dict):
             continue
 
-        # Only explicitly marked synthetic records are searchable.
-        if record.get("demo") is not True:
-            continue
+        raw_phone = str(record.get("Mobile No.", ""))
+        # Strip spaces, hyphens, parentheses to handle numbers like '256-772354015'
+        clean_phone = re.sub(r"\D", "", raw_phone)
 
-        if str(record.get("Mobile No.", "")) == phone:
+        # Match exact digits or check if query matches the cleaned mobile number
+        if clean_phone == clean_query or raw_phone.strip() == phone.strip():
             return (
                 "👑 MY PAYMENT API 👑\n"
                 "━━━━━━━━━━━━━━━━━━\n\n"
-                "✅ STATUS: DEMO MATCH\n"
-                "🧪 TYPE: SYNTHETIC TEST DATA\n\n"
-                f"👤 Name: {record.get('Paytm User Name', 'Demo User')}\n"
-                f"📧 Email: {record.get('Email Id', 'demo@example.com')}\n"
+                "✅ STATUS: MATCH FOUND\n\n"
+                f"👤 Name: {record.get('Paytm User Name', 'N/A')}\n"
+                f"📧 Email: {record.get('Email Id', 'N/A')}\n"
                 f"📱 Mobile: {record.get('Mobile No.', 'N/A')}\n"
                 f"🎂 DOB: {record.get('Date of Birth', 'N/A')}\n"
                 f"🏙️ City: {record.get('City', 'N/A')}\n"
@@ -83,5 +85,5 @@ def lookup(
 
     raise HTTPException(
         status_code=404,
-        detail="❌ Demo record not found"
+        detail="❌ Record not found"
     )
