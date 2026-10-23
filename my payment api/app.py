@@ -1,10 +1,8 @@
 
 import json
-import os
-import secrets
 from pathlib import Path
 
-from fastapi import FastAPI, Header, HTTPException, Query
+from fastapi import FastAPI, HTTPException, Query
 from fastapi.responses import PlainTextResponse
 
 app = FastAPI(
@@ -24,10 +22,12 @@ CONTACT = "https://t.me/priyanshuexploits"
 def home():
     return (
         "👑 MY PAYMENT API 👑\n"
-        "━━━━━━━━━━━━━━━━━━\n\n"
+        "━━━━━━━━━━━━━━━━━━\n"
         "🟢 Status: Online\n"
-        "🔎 Endpoint: /lookup?phone=NUMBER\n"
-        "🔐 Authentication: API Key Required\n\n"
+        "🔎 Search: /lookup?phone=9000000001\n"
+        "🧪 Mode: Synthetic Demo Only\n"
+        "🔓 API Key: Not Required\n"
+        "━━━━━━━━━━━━━━━━━━\n"
         f"👨‍💻 Created By: {CREATED_BY}\n"
         f"📢 Telegram: {CONTACT}\n"
     )
@@ -40,33 +40,26 @@ def lookup(
         min_length=10,
         max_length=15,
         pattern=r"^[0-9]+$"
-    ),
-    x_api_key: str = Header(default="")
+    )
 ):
-    api_key = os.environ.get("API_KEY", "").strip()
-
-    if not api_key:
-        raise HTTPException(
-            status_code=503,
-            detail="🔐 API key is not configured"
-        )
-
-    if not secrets.compare_digest(x_api_key, api_key):
-        raise HTTPException(
-            status_code=401,
-            detail="❌ Invalid API key"
-        )
-
     try:
-        with DATA_FILE.open(encoding="utf-8") as f:
-            records = json.load(f)
-    except (OSError, json.JSONDecodeError):
+        with DATA_FILE.open(encoding="utf-8") as file:
+            records = json.load(file)
+
+        if not isinstance(records, list):
+            raise ValueError("Expected a list")
+
+    except (OSError, json.JSONDecodeError, ValueError):
         raise HTTPException(
             status_code=500,
-            detail="⚠️ Demo database unavailable"
+            detail="⚠️ Demo database unavailable or invalid"
         )
 
     for record in records:
+        if not isinstance(record, dict):
+            continue
+
+        # Only explicitly marked synthetic records are searchable.
         if record.get("demo") is not True:
             continue
 
@@ -74,15 +67,15 @@ def lookup(
             return (
                 "👑 MY PAYMENT API 👑\n"
                 "━━━━━━━━━━━━━━━━━━\n\n"
-                "✅ STATUS: DEMO MATCH\n\n"
-                f"👤 Name: {record.get('Paytm User Name', 'N/A')}\n"
-                f"📧 Email: {record.get('Email Id', 'N/A')}\n"
+                "✅ STATUS: DEMO MATCH\n"
+                "🧪 TYPE: SYNTHETIC TEST DATA\n\n"
+                f"👤 Name: {record.get('Paytm User Name', 'Demo User')}\n"
+                f"📧 Email: {record.get('Email Id', 'demo@example.com')}\n"
                 f"📱 Mobile: {record.get('Mobile No.', 'N/A')}\n"
                 f"🎂 DOB: {record.get('Date of Birth', 'N/A')}\n"
                 f"🏙️ City: {record.get('City', 'N/A')}\n"
                 f"🚻 Gender: {record.get('Gender', 'N/A')}\n"
                 f"🏠 Address: {record.get('Address') or 'Not Available'}\n\n"
-                "⚠️ Synthetic demo data only\n"
                 "━━━━━━━━━━━━━━━━━━\n"
                 f"👨‍💻 Created By: {CREATED_BY}\n"
                 f"📢 Telegram: {CONTACT}\n"
@@ -91,5 +84,4 @@ def lookup(
     raise HTTPException(
         status_code=404,
         detail="❌ Demo record not found"
-        )
-        
+    )
